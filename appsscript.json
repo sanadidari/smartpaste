@@ -1,0 +1,30 @@
+{
+  "timeZone": "GMT",
+  "dependencies": {
+    "enabledAdvancedServices": []
+  },
+  "exceptionLogging": "STACKDRIVER",
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/script.container.ui",
+    "https://www.googleapis.com/auth/script.external_request",
+    "https://www.googleapis.com/auth/userinfo.email"
+  ],
+  "urlFetchWhitelist": [
+    "https://generativelanguage.googleapis.com/",
+    "https://www.paypal.com/"
+  ],
+  "runtimeVersion": "V8",
+  "addOns": {
+    "common": {
+      "name": "SmartPaste AI",
+      "logoUrl": "https://sanadidari.com/web/smartpaste_logo_512.png",
+      "useLocaleFromApp": true,
+      "homepageTrigger": {
+        "runFunction": "showSidebar",
+        "enabled": true
+      }
+    },
+    "sheets": {}
+  }
+}

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <?!= include('Stylesheet'); ?>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo-icon">S</div>
+      <h1>SmartPaste AI</h1>
+      <div class="credit-badge">📦 <span id="credit-count">?</span></div>
+    </header>
+
+    <div class="main-content">
+      <div class="card">
+        <h3>1. Paste your raw data</h3>
+        <textarea id="paste-area" placeholder="Paste text, web data, PDF extracts here..."></textarea>
+      </div>
+
+      <div class="card preview-card" id="preview-section" style="display:none;">
+        <h3>2. Transmutation Preview</h3>
+        <div id="preview-table" class="scroll-table"></div>
+      </div>
+
+      <div class="actions">
+        <button id="transmute-btn" class="primary-btn" onclick="transmute()">✨ Transmute Now</button>
+        <button id="insert-btn" class="secondary-btn" style="display:none;" onclick="insertData()">📥 Insert into Sheets</button>
+      </div>
+      
+      <div id="status-msg"></div>
+    </div>
+
+    <footer>
+      <span>Sanadidari Ecosystem</span>
+      <span class="version">v1.0</span>
+    </footer>
+  </div>
+
+  <script>
+    let lastTransmutedData = null;
+
+    function transmute() {
+      const rawData = document.getElementById('paste-area').value;
+      if (!rawData) return showStatus("Please paste some data first.", "error");
+
+      const btn = document.getElementById('transmute-btn');
+      btn.disabled = true;
+      btn.innerText = "Analyzing...";
+      showStatus("AI is analyzing your data...", "info");
+
+      google.script.run
+        .withSuccessHandler((res) => {
+          btn.disabled = false;
+          btn.innerText = "✨ Transmute Again";
+          if (res.status === 'success') {
+            lastTransmutedData = res.data;
+            showPreview(res.data);
+            updateCredits(res.credits);
+            showStatus(res.message, "success");
+            document.getElementById('insert-btn').style.display = 'block';
+          } else {
+            showStatus(res.message, "error");
+          }
+        })
+        .withFailureHandler((err) => {
+          btn.disabled = false;
+          btn.innerText = "✨ Retry";
+          showStatus("Error : " + err, "error");
+        })
+        .processSmartPaste(rawData);
+    }
+
+    function insertData() {
+      if (!lastTransmutedData) return;
+      showStatus("Inserting into your sheet...", "info");
+      
+      google.script.run
+        .withSuccessHandler((res) => {
+          if (res.status === 'success') {
+            showStatus("Data inserted successfully! ✅", "success");
+          } else {
+            showStatus("Insertion error: " + res.message, "error");
+          }
+        })
+        .insertDataIntoSheet(lastTransmutedData);
+    }
+
+    function showPreview(data) {
+      const container = document.getElementById('preview-table');
+      const section = document.getElementById('preview-section');
+      section.style.display = 'block';
+      
+      let html = '<table>';
+      data.slice(0, 5).forEach(row => { // Preview first 5 rows
+        html += '<tr>';
+        row.forEach(cell => {
+          html += `<td>${cell || ''}</td>`;
+        });
+        html += '</tr>';
+      });
+      html += '</table>';
+      if (data.length > 5) html += `<p class='more'>+ ${data.length - 5} more lines...</p>`;
+      
+      container.innerHTML = html;
+    }
+
+    function showStatus(msg, type) {
+      const el = document.getElementById('status-msg');
+      el.innerText = msg;
+      el.className = type;
+    }
+
+    function updateCredits(count) {
+      document.getElementById('credit-count').innerText = count;
+    }
+
+    window.onload = () => {
+      google.script.run.withSuccessHandler(updateCredits).getCurrentUserCredits();
+    };
+  </script>
+</body>
+</html>
